@@ -1,4 +1,4 @@
-#Devops Challenge
+# Devops Challenge
 
 This assignment is to create an AWS CDN for your static content website which you have to host on S3 bucket with domain name devopschallenge.postfix.in
 
@@ -13,7 +13,7 @@ NOTE: Please provide Domain Name to add in DNS.
 2. We want to gather some basic statistics for our security team. They want to know the top 10 IP addresses that hit our web servers.
 
 Your task will be the following:
-Implement a script (use any language you want) to get the top 10 IP addresses out of an existing log file (attached)
+Implement a script (use any language you want) to get the top 10 IP addresses out of an existing log file
 Save your script with no file extension
 It has to be an executable file
 there is no need for using arguments
@@ -29,6 +29,8 @@ $ count
 93.146.139.64 14
 80.116.15.0 14
 186.213.159.176 11
+  
+# Url: https://github.com/bluestacks/dev-ops-challenge/blob/master/logfile
 
 NOTE: Use AWS free tier for hosting.
 
