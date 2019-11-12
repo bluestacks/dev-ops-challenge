@@ -3,9 +3,11 @@
 This assignment is to create an AWS CDN for your static content website which you have to host on S3 bucket with domain name (https://devopschallenge.postfix.in)
 
 Case a. If the user opens (https://devopschallenge.postfix.in) it should be seen "Hello, CDN origin is working fine"
+
 A.1 This behavior object content stays in an Edge Cache at for at least 48 hours
 
 Case b. If user opens (https://devopschallenge.postfix.in/devops-folder/) it should fetch from other S3 bucket and user should see "Hello, CDN 2 origin is working fine"
+
 B.1 This behavior header should base caching on HOST and CloudFront-Viewer-Country
 
 NOTE: Please provide Domain Name to add in DNS.
