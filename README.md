@@ -30,7 +30,7 @@ $ count
 80.116.15.0 14
 186.213.159.176 11
   
-# Url: https://github.com/bluestacks/dev-ops-challenge/blob/master/logfile
+Logfile: [Click here](https://github.com/bluestacks/dev-ops-challenge/blob/master/logfile)
 
 NOTE: Use AWS free tier for hosting.
 
