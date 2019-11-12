@@ -20,18 +20,29 @@ Save your script with no file extension
 It has to be an executable file
 there is no need for using arguments
 The output format will be the following:(8 lines - top saw IP addresses by the number of hits):
+
 <ip_address><space><number_of_hits>
+
 A real example output would look like this:
+
 $ count
+
 92.6.41.236 22
+
 186.248.72.9 19
+
 81.243.137.36 18
+
 217.118.78.16 15
+
 213.118.39.51 15
+
 93.146.139.64 14
+
 80.116.15.0 14
+
 186.213.159.176 11
-  
+
 Logfile: [Click here](https://github.com/bluestacks/dev-ops-challenge/blob/master/logfile)
 
 NOTE: Use AWS free tier for hosting.
