@@ -1,5 +1,7 @@
 # Devops Challenge
 
+# Assignment 1
+
 This assignment is to create an AWS CDN for your static content website which you have to host on S3 bucket with domain name (https://devopschallenge.postfix.in)
 
 Case a. If the user opens (https://devopschallenge.postfix.in) it should be seen "Hello, CDN origin is working fine"
@@ -10,9 +12,11 @@ Case b. If user opens (https://devopschallenge.postfix.in/devops-folder/) it sho
 
 B.1 This behavior header should base caching on HOST and CloudFront-Viewer-Country
 
-NOTE: Please provide Domain Name to add in DNS.
+# NOTE: Please provide Domain Name to add in DNS.
 
-2. We want to gather some basic statistics for our security team. They want to know the top 10 IP addresses that hit our web servers.
+# Assignment 2
+
+We want to gather some basic statistics for our security team. They want to know the top 10 IP addresses that hit our web servers.
 
 Your task will be the following:
 Implement a script (use any language you want) to get the top 10 IP addresses out of an existing log file
@@ -45,5 +49,5 @@ $ count
 
 Logfile: [Click here](https://github.com/bluestacks/dev-ops-challenge/blob/master/logfile)
 
-NOTE: Use AWS free tier for hosting.
+# NOTE: Use AWS free tier for hosting.
 
