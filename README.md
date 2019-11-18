@@ -16,7 +16,7 @@ Case B. If user opens (http://devopschallenge.postfix.in/devops-folder/) it shou
 
 # Assignment 2
 
-We want to gather some basic statistics for our security team. They want to know the top 10 IP addresses that hit our web servers.
+We want to gather some basic statistics for our security team. They want to know the top 8 IP addresses that hit our web servers.
 
 Your task will be the following:
 Implement a script (use any language you want) to get the top 10 IP addresses out of an existing log file
