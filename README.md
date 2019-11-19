@@ -6,7 +6,7 @@ This assignment is to create an AWS CDN for your static content website which yo
 
 Case A. If the user opens (https://devopschallenge.postfix.in) it should be seen "Hello, CDN origin is working fine"
 
-      A.1 Create SSL in AWS(Certificate Manager) for the domain name and provide us TXT or CNAME record for verification
+      A.1 Create SSL in AWS(Certificate Manager) for the domain name with DNS verification and provide us CNAME record for validation
       A.2 This behavior object content stays in an Edge Cache at for at least 48 hours 
 
 Case B. If user opens (https://devopschallenge.postfix.in/devops-folder/) it should fetch from other S3 bucket and user should see "Hello, CDN 2 origin is working fine"
