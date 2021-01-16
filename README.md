@@ -13,7 +13,7 @@ Case B. If user opens (https://devopschallenge.postfix.in/devops-folder/) it sho
 
       B.1 This behavior header should base caching on HOST and CloudFront-Viewer-Country
 
-# NOTE: Please provide cname record to add in our DNS.
+# NOTE: Please provide a CNAME record for the validation of SSL and domain to add in our DNS.
 
 
 # Assignment 2
