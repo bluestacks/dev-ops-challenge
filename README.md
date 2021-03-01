@@ -13,7 +13,7 @@ Case B. If user opens (https://devopschallenge.chapdia.com/devops-folder/) it sh
 
       B.1 This behavior header should base caching on HOST and CloudFront-Viewer-Country
 
-# NOTE: We owned chapdia.com doamin 
+# NOTE: We owned chapdia.com domain.
 
 # NOTE: Please provide a CNAME record for the validation of SSL and domain to add in our DNS.
 
