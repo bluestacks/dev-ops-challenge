@@ -2,7 +2,7 @@
 
 # Assignment 1
 
-This assignment is to create an AWS CDN for your static content website which you have to host on S3 bucket with domain name (https://devopschallenge.abctest.in)
+This assignment is to create an Amazon CloudFront(CDN) for your static content website which you have to host on S3 bucket with domain name (https://devopschallenge.abctest.in)
 
 Case A. If the user opens (https://devopschallenge.abctest.in) it should be seen "Hello, CDN origin is working fine"
 
