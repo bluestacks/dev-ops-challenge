@@ -12,7 +12,7 @@ Case B. If user opens (https://xxxxxxxxx.cloudfront.net/devops-folder/) it shoul
 
       B.1 This behavior header should base caching on HOST and CloudFront-Viewer-Country
 
-# NOTE: Please create CloudFront Distribution without the Alternate Domain Names (CNAMEs) and share the CDN domain name to validate the assignment.
+# NOTE: Please create only one CloudFront Distribution without the Alternate Domain Names (CNAMEs) and share the CDN domain name to validate the assignment.
 
 # Assignment 2
 
