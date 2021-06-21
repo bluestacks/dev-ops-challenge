@@ -14,6 +14,8 @@ Case B. If user opens (https://xxxxxxxxx.cloudfront.net/devops-folder/) it shoul
 
 # NOTE: Please create only one CloudFront Distribution without the Alternate Domain Names (CNAMEs) and share the CDN domain name to validate the assignment.
 
+# NOTE: Both the URL's should not include index.html `
+
 # Assignment 2
 
 We want to gather some basic statistics for our security team. They want to know the top 8 IP addresses that hit our web servers.
