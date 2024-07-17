@@ -8,13 +8,13 @@ Case A. If the user opens (https://xxxxxxxxx.cloudfront.net/) it should be seen 
 
       A.1 This behavior object content stays in an Edge Cache at for at least 48 hours 
 
-Case B. If user opens (https://xxxxxxxxx.cloudfront.net/devops-folder/) it should fetch from other S3 bucket and user should see "Hello, CDN 2 origin is working fine"
+Case B. If the user opens (https://xxxxxxxxx.cloudfront.net/devops-folder/) it should fetch from other S3 bucket and user should see "Hello, CDN 2 origin is working fine"
 
       B.1 This behavior header should base caching on HOST and CloudFront-Viewer-Country
 
 # NOTE: Please create only one CloudFront Distribution without the Alternate Domain Names (CNAMEs) and share the CDN domain name to validate the assignment.
 
-# NOTE: Both the URL's should not include index.html `
+# NOTE: Both the URLs should not include index.html or any .html extension.`
 
 # Assignment 2
 
@@ -24,7 +24,7 @@ Your task will be the following:
 Implement a script (use any language you want) to get the top 8 IP addresses out of an existing log file
 Save your script with no file extension
 It has to be an executable file
-there is no need for using arguments
+there is no need to use arguments
 The output format will be the following:(8 lines - top saw IP addresses by the number of hits):
 
 <ip_address><space><number_of_hits>
