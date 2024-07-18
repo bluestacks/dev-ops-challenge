@@ -1,5 +1,7 @@
 <!-- A client has a Linux server that has just paged you because of a high load average issue. Upon connecting and running uptime you see: 12:20:50 up 1 day, 10:52, 6 users, load average: 44.28, 33.34, 30.44 How would you troubleshoot this issue to find out what is the source of the load and what tools would you use? Please also list what you would look for in the output of the commands you would run. -->
-
+##### AUTHOR - TANUJ ARORA
+##### DATE - 19 July 2024
+----
 ### COMMANDS TO INVESTIGATE
 #### Check the Uptime and Average Load Average
 ```sh

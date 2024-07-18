@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+##### AUTHOR - TANUJ ARORA
+##### DATE - 19 July 2024
 
 from collections import Counter
 
@@ -9,7 +11,6 @@ def log_analysis():
     log_dict = Counter()
 
     try:
-        # Read the log file and count IP addresses
         with open(log_file, 'r') as file:
             lines = file.readlines()
             for line in lines:
