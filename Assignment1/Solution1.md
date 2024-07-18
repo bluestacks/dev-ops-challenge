@@ -1,6 +1,8 @@
 ## ASSIGNMENT 1 - CloudFront CDN and S3 Bucket
 ##### AUTHOR - TANUJ ARORA
 ##### DATE - 19 July 2024
+https://d2cqv4ppe4nmdl.cloudfront.net
+https://d2cqv4ppe4nmdl.cloudfront.net/devops-folder/
 ----
 ### Create a Bucket for Root Object
 1. Upload the index.html in the root directory
