@@ -1,0 +1,14 @@
+#!/bin/bash
+script_dir=$(dirname "$0")
+log_file="$script_dir/logfile.txt"
+if [ ! -f "$log_file" ]; then
+    echo "Log file not found: $log_file"
+    exit 1
+fi
+top_ips=$(grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' "$log_file" | \
+          sort | \
+          uniq -c | \
+          sort -nr | \
+          head -n 8)
+
+echo "$top_ips" | awk '{print $2, $1}'
