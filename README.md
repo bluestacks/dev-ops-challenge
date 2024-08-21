@@ -10,8 +10,6 @@ Case A. If the user opens (https://xxxxxxxxx.cloudfront.net/) it should be seen 
 
 Case B. If the user opens (https://xxxxxxxxx.cloudfront.net/devops-folder/) it should fetch from other S3 bucket and user should see "Hello, CDN 2 origin is working fine"
 
-      B.1 This behavior header should base caching on HOST and CloudFront-Viewer-Country
-
 # NOTE: Please create only one CloudFront Distribution without the Alternate Domain Names (CNAMEs) and share the CDN domain name to validate the assignment.
 
 # NOTE: Both the URLs should not include index.html or any .html extension.`
