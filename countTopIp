@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# SCRIPT: Get Top IP's with Count script
+# AUTHOR: Abhishek Baranwal
+# DATE:   Sep 12,20i20
+# REV:    1.1.1 
+#
+#
+# PLATFORM: Ubuntu 18.04 LTS
+# 
+# PURPOSE: Shell script read the log file and look for all ip's and return 8 top ip's with there count
+# REV LIST:
+#    DATE        : Sep 23,2020
+#    BY          : Abhishek Baranwal
+#    MODIFICATION: Add it under one template
+# 
+# set -n   # Uncomment to check script syntax, without execution.
+#          # NOTE: Do forget comment it back as it won't allow the 
+#          # the script to execute.
+#
+# set +x   # Uncomment this for debugging this shell script.
+#
+#
+awk '{ print $1}' logfile | sort | uniq -c | sort -nr | head -n 8 |  awk '{print $2 " " $1}'
+
+# End of script
