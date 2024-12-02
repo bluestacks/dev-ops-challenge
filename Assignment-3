@@ -1,0 +1,15 @@
+To check this high load average issue
+
+1) check the Processes with high cpu usage using 
+   "top" command
+
+   check the process in nessasary or not, if not kill the process or restart the process.
+   If still CPU usage is high then upgrade your CPU
+
+2) Check the load on disk using
+   "iostat" command
+
+3) check for the disk utilization using 
+   "df -h" command
+
+   if disk usage is full then add the new disk this might reduce the load

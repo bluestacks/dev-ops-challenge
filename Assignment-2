@@ -1,0 +1,5 @@
+#!/bin/bash
+
+#Top saw IP addresses by the number of hits.
+
+awk '{ print $1 }' logfile | uniq -c | sort -nr | head -n 8 | awk '{ print $2 " " $1 }'
