@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+# Check if the log file exists
+if [ ! -f "logfile" ]; then
+  echo "Log file not found!"
+  exit 1
+fi
+
+# top 8 IP addresses and their hit counts
+awk '{print $1}' logfile | sort | uniq -c | sort -nr | head -8 | awk '{print $2, $1}'
+
+# then we need to make it executable by give the permissoions to run otherwise Linux will think it is as a just text file
+cmd : chmod +x topip 
+
+#run the scripts
+./topip
+
+
+
+
+
+

@@ -1,0 +1,29 @@
+
+firstly we need to understand the issue by checking the CPU utilization 
+top or htop 
+
+if unnecessary we need to kill it
+kill -9 PID
+
+if it is a service then we need to restart it 
+systemctl restart servicename
+if CPU stays high even after that we need to scale-up by providing or adding more CPUs
+
+then we need to check the disk input output sometimes load is average is high because of slow or input output wait 
+iostat -x 1 3 
+if % >80 
+high await time means disk is overloaded 
+
+Solutions:
+we need to add more I/O processes to peak times
+use faster disk like SSD
+Split load across multiple disks 
+
+if partition is full processes will take time or stop
+df -f
+
+if any mount point is >90% clean it 
+sudo du -sh /* | sort -h
+
+to check memory usage 
+free -m
