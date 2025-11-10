@@ -1,0 +1,49 @@
+Assignment1
+
+Case A
+d2jtjvpfv0kioy.cloudfront.net
+Case B
+d2jtjvpfv0kioy.cloudfront.net/devops-folder/
+---------------------------------------------------------------------------------------------
+
+Assignment 2
+awk '{print $1}' "$LOGFILE" | sort | uniq -c | sort -nr | head -8 | awk '{print $2, $1}'
+
+---------------------------------------------------------------------------------------------
+Assignment 3
+uptime - Check system load
+
+nproc
+
+top-htop     
+Looks for:
+%CPU → process using too much CPU
+%MEM → memory-heavy process
+Any process constantly taking > 90% CPU
+Zombie process
+High I/O wait (wa > 10–15%)
+
+iostat -xz 1
+Checks for I/O (disk bottleneck)
+
+free -m
+Look for low free memory and high swap usage.
+If swap is heavily used → add RAM or find memory-leaking processes.
+
+mpstat -P ALL 1
+Check CPU core usage
+
+iotop 
+Processes doing heavy disk I/O.
+
+netstat -plant | grep :80 | wc -l 
+Count active web connections.
+
+ss -tulnp 
+Check open ports and listening processes.
+
+tail -n 50 /var/log/syslog 
+Check system logs for errors.
+
+dmesg | tail 
+Kernel-level warnings/errors.
