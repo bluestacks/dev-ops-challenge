@@ -1,0 +1,128 @@
+Assignment1 -CloudFront + two S3 origins (single distribution)
+
+Case A
+d2jtjvpfv0kioy.cloudfront.net
+Case B
+d2jtjvpfv0kioy.cloudfront.net/devops-folder/
+=======================================================================
+Assignment 2 — Script to output top 8 IP addresses
+#!/usr/bin/bash
+# Save this as 'count'.
+
+#Make executable: chmod +x count
+
+# It looks for common log filenames in the current directory.
+LOGFILES=("access.log" "logfile" "log" "access_log" "combined.log" "access.log.1" "nginx-access.log")
+FOUND=""
+for f in "${LOGFILES[@]}"; do
+  if [ -f "$f" ]; then
+    FOUND="$f"
+    break
+  fi
+done
+
+# Also check in /var/log if nothing found locally
+if [ -z "$FOUND" ]; then
+  for f in "/var/log/nginx/access.log" "/var/log/httpd/access_log" "/var/log/apache2/access.log"; do
+    if [ -f "$f" ]; then
+      FOUND="$f"
+      break
+    fi
+  done
+fi
+
+if [ -z "$FOUND" ]; then
+  echo "No log file found. Place a log file named access.log or logfile in current dir, or update the script."
+  exit 1
+fi
+
+# Extract first field (IP), count, sort numeric desc, print top 8
+awk '{print $1}' "$FOUND" | \
+  grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | \
+  sort | uniq -c | sort -nr | head -n 8 | awk '{print $2" "$1}'
+=====================================================================================================================
+
+Assignment 3 — Troubleshooting high load average on Linux server
+
+#confirms extremely high load. The 3 numbers are 1, 5, 15-minute load averages.
+uptime 
+
+#Look at %CPU, %MEM, %wa (IO wait).
+top or htop
+
+#What to look for: one or few processes using 100% CPU; high %wa means I/O wait (disk stuck). Many processes in D state (uninterruptible sleep) indicate IO waits.
+top press 1 to see per-CPU usage.
+
+#Find top CPU consumers. If a single process incremental makes load high, note its PID and command.
+ps aux --sort=-%cpu | head -n 20
+
+#Look for memory hogs — heavy swapping also increases load.
+ps aux --sort=-%mem | head -n 20
+
+#What to look for: devices with very high %util (near 100%), high await, high svctm. That means disk is saturated.
+
+iostat -x 1 5 (from sysstat package)
+
+#Look at r (runnable processes) and b (blocked). High r = CPU bottleneck; high b or high wa shows I/O blocking. Check si/so for swapping.
+vmstat 1 5
+
+#Shows processes doing most IO right now. Look for processes with heavy READ/WRITE.
+iotop -o (needs root)
+
+#Kernel messages — look for disk errors, OOM killer, filesystem errors, driver failures.
+
+dmesg | tail -n 50 & journalctl -xe
+
+#See RAM, swap usage. If swap is heavily used, performance suffers and load increases.
+
+free -m
+
+#See established connections; look for network flood or many incoming connections (DDOS, slowloris).
+
+ss -tunp / netstat -plant
+
+#See files/sockets a process has open.
+lsof -p <PID> (for suspicious PID)
+
+#If a particular process is stuck, strace can show what system calls it’s waiting on (read, write, futex, open).
+
+strace -p <PID> (careful, can slow process)
+
+#For suspicious services (e.g., apache/nginx/mysql), check recent logs and restart history.
+
+systemctl status <service> and journalctl -u <service>
+
+#If it's a database server: check DB process stats  queries causing high CPU/IO, slow queries.
+
+mysql SHOW PROCESSLIST;
+
+######How to interpret common findings
+
+High CPU usage: top will show processes with high %CPU. Action: investigate process, check if it's legitimate, consider restarting or killing, or scaling CPU.
+
+High IO wait (%wa): iostat and iotop will show disk saturation — maybe due to backup, large writes, or failing disk. Action: stop heavy IO task, move to different disk, or scale to faster storage (EBS gp3).
+
+High memory + swap: free -m and vmstat show swapping — leads to high load. Action: free memory (stop processes), add memory, tune caching.
+
+Many processes in D state: usually IO blocking; could indicate filesystem or NFS hangs.
+
+Large number of processes or many short-lived processes: could be fork-bomb or job scheduler misconfigured. Check process list and what launched them (cron, systemd timers).
+
+Network flood: ss/netstat show many connections from same IPs — could be DoS. Action: block IPs with firewall, enable rate limiting.
+
+Example remediation steps (once root cause known)
+
+CPU-bound process: kill -9 <PID> or systemctl restart <service> (after risk assessment). Or scale vertically (bigger instance) or horizontally (add instances behind a load balancer).
+
+Disk saturated: stop/limit the job, move logs to different disk, increase IOPS (in AWS switch to faster EBS type), check failing disk.
+
+Memory exhaustion: stop services, tune caches, add swap temporarily, add RAM (resize instance).
+
+Network attack: block at firewall (iptables, security group), enable AWS WAF / AWS Shield if in cloud.
+
+Application bug: roll back recent deploy; review app logs.
+
+
+
+
+
