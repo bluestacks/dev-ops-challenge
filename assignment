@@ -1,0 +1,528 @@
+Assignment 1 — CloudFront (single distribution) + two S3 origins
+
+
+I will be using Terraform 
+Create main.tf, variables.tf, outputs.tf  & then apply terraform init   terraform plan  &  terraform apply.
+main.tf
+terraform {
+  required_version = ">= 1.2.0"
+  required_providers {
+    aws = { source = "hashicorp/aws", version = ">= 4.0" }
+    random = { source = "hashicorp/random", version = ">= 3.0" }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+# Random suffixes to ensure unique bucket names
+resource "random_id" "r1" { byte_length = 4 }
+resource "random_id" "r2" { byte_length = 4 }
+
+# Root private bucket (origin 1)
+resource "aws_s3_bucket" "root" {
+  bucket = "${var.bucket_root_prefix}-${random_id.r1.hex}"
+  acl    = "private"
+  force_destroy = true
+  tags = { Name = "assignment-root" }
+}
+
+# Devops private bucket (origin 2)
+resource "aws_s3_bucket" "devops" {
+  bucket = "${var.bucket_devops_prefix}-${random_id.r2.hex}"
+  acl    = "private"
+  force_destroy = true
+  tags = { Name = "assignment-devops" }
+}
+
+# simple index documents
+resource "aws_s3_bucket_object" "root_index" {
+  bucket       = aws_s3_bucket.root.id
+  key          = "index.html"
+  content      = "Hello, CDN origin is working fine"
+  content_type = "text/html"
+}
+
+resource "aws_s3_bucket_object" "devops_index" {
+  bucket       = aws_s3_bucket.devops.id
+  key          = "devops-folder/index.html"
+  content      = "Hello, CDN 2 origin is working fine"
+  content_type = "text/html"
+}
+
+# CloudFront OAI - allows CloudFront to read private buckets
+resource "aws_cloudfront_origin_access_identity" "oai" {
+  comment = "OAI for assignment"
+}
+
+# Bucket policies to allow OAI read
+data "aws_iam_policy_document" "root_policy" {
+  statement {
+    sid = "AllowCFGetObject"
+    principals { type = "AWS" identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn] }
+    actions = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.root.arn}/*"]
+  }
+}
+resource "aws_s3_bucket_policy" "root_policy" {
+  bucket = aws_s3_bucket.root.id
+  policy = data.aws_iam_policy_document.root_policy.json
+}
+
+data "aws_iam_policy_document" "devops_policy" {
+  statement {
+    sid = "AllowCFGetObject"
+    principals { type = "AWS" identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn] }
+    actions = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.devops.arn}/*"]
+  }
+}
+resource "aws_s3_bucket_policy" "devops_policy" {
+  bucket = aws_s3_bucket.devops.id
+  policy = data.aws_iam_policy_document.devops_policy.json
+}
+
+# CloudFront Function to rewrite directory URIs to index.html
+resource "aws_cloudfront_function" "dir_to_index" {
+  name    = "dir-to-index-${random_id.r1.hex}"
+  runtime = "cloudfront-js-1.0"
+  publish = true
+  comment = "Rewrite directory requests to index.html"
+
+  code = <<EOF
+function handler(event) {
+  var request = event.request;
+  var uri = request.uri || "/";
+  if (uri.endsWith("/")) {
+    request.uri = uri + "index.html";
+    return request;
+  }
+  var last = uri.substring(uri.lastIndexOf("/") + 1);
+  if (last.indexOf(".") === -1) {
+    request.uri = (uri === "" || uri === "/") ? "/index.html" : uri + "/index.html";
+  }
+  return request;
+}
+EOF
+}
+
+# Single CloudFront distribution with two origins and ordered behavior
+resource "aws_cloudfront_distribution" "cdn" {
+  enabled = true
+  comment = "assignment single distribution - two S3 origins"
+
+  origins {
+    domain_name = aws_s3_bucket.root.bucket_regional_domain_name
+    origin_id   = "origin-root"
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
+    }
+  }
+
+  origins {
+    domain_name = aws_s3_bucket.devops.bucket_regional_domain_name
+    origin_id   = "origin-devops"
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id = "origin-root"
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = false
+      cookies { forward = "none" }
+    }
+
+    # keep at edge for at least 48 hours
+    min_ttl     = 172800
+    default_ttl = 172800
+    max_ttl     = 31536000
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.dir_to_index.arn
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern = "devops-folder/*"
+    target_origin_id = "origin-devops"
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = false
+      cookies { forward = "none" }
+    }
+
+    min_ttl     = 0
+    default_ttl = 3600
+    max_ttl     = 86400
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.dir_to_index.arn
+    }
+  }
+
+  restrictions { geo_restriction { restriction_type = "none" } }
+
+  viewer_certificate { cloudfront_default_certificate = true }
+
+  price_class = "PriceClass_All"
+  is_ipv6_enabled = true
+}
+
+vairable.tf
+
+variable "aws_region" {
+  description = "AWS region (for Terraform aws provider)"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "bucket_root_prefix" {
+  description = "prefix for root S3 bucket (random suffix appended)"
+  type        = string
+  default     = "devops-assignment-root"
+}
+
+variable "bucket_devops_prefix" {
+  description = "prefix for devops S3 bucket (random suffix appended)"
+  type        = string
+  default     = "devops-assignment-devops"
+}
+output.tf
+
+output "cloudfront_domain" {
+  
+  value       = aws_cloudfront_distribution.cdn.domain_name
+}
+
+output "root_bucket" {
+  value = aws_s3_bucket.root.bucket
+}
+
+output "devops_bucket" {
+  value = aws_s3_bucket.devops.bucket
+}
+domain name=https://d2jtjvpfv0kioy.cloudfront.net/devops-folder/
+domain name= https://d2jtjvpfv0kioy.cloudfront.net/
+
+
+
+
+ASSIGNMENT 2
+
+
+
+#!/bin/sh
+# count - find top 8 IPv4 addresses in a log file (executable, no extension)
+# This script looks for common log filenames and falls back to /mnt/data/logfile.txt (uploaded test file).
+# Output format: <ip_address><space><number_of_hits>  (8 lines - top IPs)
+# #Make executable: chmod +x count
+
+# Candidate log locations (ordered)
+CANDIDATES="access.log logfile log access_log combined.log nginx-access.log /var/log/nginx/access.log /var/log/apache2/access.log /var/log/httpd/access_log /mnt/data/logfile.txt"
+
+LOG=""
+for f in $CANDIDATES; do
+  if [ -f "$f" ]; then
+    LOG="$f"
+    break
+  fi
+done
+
+if [ -z "$LOG" ]; then
+  echo "No log file found. Place a log file with one of these names: access.log, logfile, log, access_log, combined.log" >&2
+  exit 1
+fi
+
+# Use sed to extract a leading IPv4 address if present, then count and print top 8.
+# - sed extracts IPv4 at start of line (common in combined/apache/nginx logs)
+# - fallback grep if lines have leading whitespace
+sed -n 's/^[[:space:]]*\([0-9]\{1,3\}\(\.[0-9]\{1,3\}\)\{3\}\).*/\1/p' "$LOG" | \
+  awk '{print $1}' | \
+  sort | uniq -c | sort -nr | head -n 8 | awk '{print $2" "$1}'
+
+
+
+ASSIGNMENT 3
+
+Below is a **PDF-style formatted Assignment 3**, written exactly the way you can paste directly into GitHub as a **README.md** or upload as a PDF later.
+
+It is clean, structured, formatted like a real DevOps assignment submission — **copy once, paste anywhere**.
+
+---
+
+# **Assignment 3 — Troubleshooting High Load Average on a Linux Server**
+
+---
+
+## **Introduction**
+
+A Linux server reported a critical high load average:
+
+```
+12:20:50 up 1 day, 10:52, 6 users, load average: 44.28, 33.34, 30.44
+```
+
+A load this high indicates severe resource saturation.
+This document outlines a structured, professional troubleshooting approach to identify the cause of the load spike and the tools used to analyze CPU, memory, I/O, network, and system-level behavior.
+
+---
+
+# **1. Verify the Load Condition**
+
+### **Command**
+
+```
+uptime
+```
+
+### **What to Check**
+
+* 1, 5, 15-minute load averages — are they increasing or decreasing?
+* Compare load values to CPU core count.
+* Determines whether the system is under sudden stress or long-term pressure.
+
+---
+
+# **2. Real-Time System Inspection**
+
+### **Command**
+
+```
+top
+```
+
+*(or `htop` if installed)*
+
+### **Key Output Indicators**
+
+* **R (running)** tasks → CPU bottleneck
+* **D (uninterruptible sleep)** → disk/NFS I/O stall
+* **%wa (I/O wait)** → high values indicate I/O slowness
+* Per-CPU breakdown (press **1** in `top`)
+* Processes at **100% CPU** or high cumulative CPU usage
+
+---
+
+# **3. Identify CPU and Memory Heavy Processes**
+
+### **Commands**
+
+```
+ps -eo pid,user,cmd,%cpu --sort=-%cpu | head
+ps -eo pid,user,cmd,%mem --sort=-%mem | head
+```
+
+### **Interpretation**
+
+* Runaway CPU processes → infinite loops, busy workers
+* Memory-heavy processes → risk of swapping
+* Multiple similar processes → cron/job misconfiguration
+
+---
+
+# **4. Analyze Disk I/O Performance (Most Common Cause of Huge Load)**
+
+### **Command**
+
+```
+iostat -xz 1 5
+```
+
+### **What to Look For**
+
+* **%util near 100%** → disk saturated
+* **await latency high** → slow storage response
+* **avgqu-sz** large → many tasks waiting on disk
+* Unexpected read/write spikes
+
+Disk bottlenecks create high load due to blocked processes.
+
+---
+
+# **5. Examine Run Queue, Blocked Tasks & Swap Activity**
+
+### **Command**
+
+```
+vmstat 1 5
+```
+
+### **Key Fields**
+
+* **r** (run queue): high values → CPU starvation
+* **b** (blocked): high values → I/O wait
+* **wa** (I/O wait time): high percentages reveal storage issues
+* **si / so** (swap activity): indicates memory exhaustion
+
+---
+
+# **6. Find Processes Causing Heavy Disk I/O**
+
+### **Command**
+
+```
+iotop -ao
+```
+
+### **What to Look For**
+
+* Processes performing excessive reads/writes
+* Backup jobs, database flushes, log flooding
+* Unexpected I/O-heavy applications
+
+---
+
+# **7. Review Kernel & System Logs**
+
+### **Commands**
+
+```
+dmesg | tail -n 50
+journalctl -k -n 50
+```
+
+### **Potential Issues**
+
+* Disk I/O errors
+* NFS timeouts
+* Filesystem corruption
+* Kernel warnings
+* OOM killer events
+
+Logs often reveal hardware or filesystem-related causes of high load.
+
+---
+
+# **8. Check Memory and Swap Availability**
+
+### **Command**
+
+```
+free -h
+```
+
+### **Indicators**
+
+* Low “available” memory
+* Swap fully or heavily used
+* Memory + disk contention → system thrashing
+
+---
+
+# **9. Analyze Network Pressure**
+
+### **Commands**
+
+```
+ss -tunap
+ss -s
+```
+
+### **What to Identify**
+
+* Huge volume of incoming connections
+* DDoS-like patterns (many connections from single IP)
+* Stuck TCP states (CLOSE_WAIT / SYN_RECV)
+
+---
+
+# **10. Deep Dive Into a Suspicious Process**
+
+### **Commands**
+
+```
+lsof -p <PID>
+strace -p <PID>
+```
+
+### **Why These Matter**
+
+* Check open files, sockets, NFS mounts
+* Identify the exact system call a process is stuck on
+* Detect lock contention (`futex()`), disk wait (`read()`), or network block (`connect()`)
+
+---
+
+# **11. Troubleshoot Specific Services**
+
+### **Commands**
+
+```
+systemctl status <service>
+journalctl -u <service>
+```
+
+### **Use Case**
+
+* Web servers (nginx/apache)
+* Databases (MySQL/PostgreSQL)
+* Custom application services
+
+Look for restarts, errors, crashes, timeouts, and performance bottlenecks.
+
+---
+
+# **12. Root Cause Interpretation**
+
+### **CPU Bottleneck Indicators**
+
+* High run queue (`r`)
+* Processes using 100% CPU
+* **Fix:** stop runaway tasks, optimize code, scale CPU
+
+### **Disk I/O Bottleneck**
+
+* Many `D` state tasks
+* High `%wa` in top
+* High disk `%util`
+* **Fix:** stop heavy I/O jobs, fix disks/NFS, upgrade storage
+
+### **Memory Exhaustion**
+
+* Swap used + `si/so` active
+* OOM messages
+* **Fix:** free RAM, tune applications, add memory
+
+### **Network Overload**
+
+* Too many active connections
+* **Fix:** rate limit, block IPs, optimize web server
+
+### **NFS / Filesystem Issues**
+
+* Processes stuck in D state
+* Kernel errors in dmesg
+* **Fix:** remount volume, resolve storage backend issues
+
+---
+
+
+
+---
+
+# **Conclusion**
+
+A load average above **44** signals extreme system pressure.
+The troubleshooting workflow combines:
+
+1. Load verification
+2. Live CPU and I/O analysis
+3. Memory and swap evaluation
+4. Disk and network inspection
+5. Kernel and service-level diagnostics
+
+
+
+
